@@ -2,10 +2,17 @@ const CONFIG = {
   GOOGLE_MAPS_API_KEY: "AIzaSyBpLGnD9GkXgUIRiF2dzmJNWjhN4aSjvr4",
   OPENWEATHERMAP_API_KEY: "54acca8f3ca7ae26914d5fc6f2b31b3c",
   CARBON_EMISSIONS: {
-    DRIVING: 120,
-    WALKING: 0,
+    DRIVING: {
+      car: 120,
+      bus: 68,
+      motorcycle: 103,
+    },
+    TRANSIT: {
+      train: 14,
+      bus: 68,
+    },
     BICYCLING: 0,
-    TRANSIT: 68,
+    WALKING: 0,
   },
 };
 
@@ -112,16 +119,46 @@ function handleRouteSuccess(response, travelMode) {
   directionsRenderer.setDirections(response);
   const route = response.routes[0];
 
+  addRouteMarkers(route);
   showAllCards();
   updateAllInfo(route, travelMode);
 }
 
+function addRouteMarkers(route) {
+  const legs = route.legs;
+  legs.forEach((leg) => {
+    const distance = leg.distance.text;
+    const duration = leg.duration.text;
+    const startLocation = leg.start_location;
+
+    new google.maps.marker.AdvancedMarkerElement({
+      position: startLocation,
+      map: map,
+      title: `Distance: ${distance}, Duration: ${duration}`,
+      content: createMarkerContent(distance, duration),
+    });
+  });
+}
+
+function createMarkerContent(distance, duration) {
+  const container = document.createElement("div");
+  container.style.backgroundColor = "white";
+  container.style.padding = "8px";
+  container.style.borderRadius = "4px";
+  container.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.2)";
+  container.innerHTML = `<div><strong>Distance:</strong> ${distance}</div><div><strong>Duration:</strong> ${duration}</div>`;
+  return container;
+}
+
 function showAllCards() {
-  ["weather-card", "carbon-card", "alternatives-card"].forEach((cardId) => {
+  const cards = ["weather-card", "carbon-card", "alternatives-card"];
+  cards.forEach((cardId) => {
     const card = document.getElementById(cardId);
-    card.classList.remove("hidden");
-    if (card.classList.contains("minimized")) {
-      toggleCard(cardId);
+    if (card) {
+      card.classList.remove("hidden");
+      if (card.classList.contains("minimized")) {
+        toggleCard(cardId);
+      }
     }
   });
 }
@@ -157,8 +194,12 @@ async function getWeatherDataForRoute(route) {
   const path = route.overview_path;
   const weatherData = [];
 
-  for (let i = 0; i < path.length; i += Math.floor(path.length / 5)) {
-    const point = path[i];
+  const start = path[0];
+  const midpoint = path[Math.floor(path.length / 2)];
+  const end = path[path.length - 1];
+
+  const points = [start, midpoint, end];
+  for (const point of points) {
     const weather = await fetchWeather(point.lat(), point.lng());
     weatherData.push(weather);
   }
@@ -185,7 +226,14 @@ function calculateCarbonFootprint(route, travelMode) {
     .getElementById("carbon-card")
     .querySelector(".card-content");
   const distance = route.legs[0].distance.value / 1000;
-  const emissionsPerKm = CONFIG.CARBON_EMISSIONS[travelMode] || 0;
+
+  let emissionsPerKm = 0;
+  if (travelMode === "DRIVING") {
+    emissionsPerKm = CONFIG.CARBON_EMISSIONS.DRIVING.car;
+  } else if (travelMode === "TRANSIT") {
+    emissionsPerKm = CONFIG.CARBON_EMISSIONS.TRANSIT.bus;
+  }
+
   const totalEmissions = (distance * emissionsPerKm).toFixed(2);
 
   displayCarbonData(distance, travelMode, totalEmissions, carbonInfoDiv);
@@ -296,6 +344,62 @@ function loadScript() {
   script.defer = true;
   script.async = true;
   document.head.appendChild(script);
+}
+function handleRouteSuccess(response, travelMode) {
+  directionsRenderer.setDirections(response);
+  const route = response.routes[0];
+  addRouteSummaryOverlay(route);
+
+  showAllCards();
+  updateAllInfo(route, travelMode);
+}
+
+function addRouteSummaryOverlay(route) {
+  removeExistingRouteSummary();
+
+  const leg = route.legs[0];
+  const midpoint = findRouteMiddlePoint(route);
+
+  const summaryDiv = document.createElement("div");
+  summaryDiv.className = "route-summary";
+  summaryDiv.innerHTML = `
+      <strong>${leg.distance.text}</strong> • <strong>${leg.duration.text}</strong>
+    `;
+
+  const overlay = new google.maps.OverlayView();
+
+  overlay.onAdd = function () {
+    const panes = this.getPanes();
+    panes.floatPane.appendChild(summaryDiv);
+  };
+
+  overlay.draw = function () {
+    const projection = this.getProjection();
+    const position = projection.fromLatLngToDivPixel(midpoint);
+
+    summaryDiv.style.left = position.x + "px";
+    summaryDiv.style.top = position.y + "px";
+  };
+
+  overlay.onRemove = function () {
+    summaryDiv.parentNode.removeChild(summaryDiv);
+  };
+
+  overlay.setMap(map);
+
+  window.currentRouteOverlay = overlay;
+}
+
+function removeExistingRouteSummary() {
+  if (window.currentRouteOverlay) {
+    window.currentRouteOverlay.setMap(null);
+  }
+}
+
+function findRouteMiddlePoint(route) {
+  const path = route.overview_path;
+  const middleIndex = Math.floor(path.length / 2);
+  return path[middleIndex];
 }
 
 loadScript();

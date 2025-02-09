@@ -1,64 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>On the Way</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div id="map"></div>
-  
-  <div class="search-container">
-    <input type="text" id="origin" placeholder="Enter origin (or use current location)">
-    <input type="text" id="destination" placeholder="Enter destination">
-    <select id="travel-mode">
-      <option value="DRIVING">Driving</option>
-      <option value="WALKING">Walking</option>
-      <option value="BICYCLING">Bicycling</option>
-      <option value="TRANSIT">Transit</option>
-    </select>
-    <button onclick="calculateRoute()">Plan Journey</button>
-  </div>
-
-  <div class="sidebar" id="sidebar">
-    <div id="weather-card" class="floating-card">
-      <div class="card-header">
-        <span>Weather Information</span>
-        <button class="minimize-btn" onclick="toggleCard('weather-card')">−</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>On the Way</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="search-container">
+      <input
+        type="text"
+        id="origin"
+        placeholder="Enter origin (or use current location)"
+      />
+      <input type="text" id="destination" placeholder="Enter destination" />
+      <select id="travel-mode">
+        <option value="DRIVING">Driving</option>
+        <option value="WALKING">Walking</option>
+        <option value="BICYCLING">Bicycling</option>
+        <option value="TRANSIT">Transit</option>
+      </select>
+      <button onclick="calculateRoute()">Plan Journey</button>
+    </div>
+    <div class="sidebar" id="sidebar">
+      <div id="weather-card" class="floating-card">
+        <div class="card-header">
+          <span>Weather Information</span>
+          <button class="minimize-btn" onclick="toggleCard('weather-card')">
+            −
+          </button>
+        </div>
+        <div class="card-content">
+          <div class="loading">Weather information will appear here.</div>
+        </div>
       </div>
-      <div class="card-content">
-        <div class="loading">Weather information will appear here.</div>
+      <div id="carbon-card" class="floating-card">
+        <div class="card-header">
+          <span>Carbon Footprint</span>
+          <button class="minimize-btn" onclick="toggleCard('carbon-card')">
+            −
+          </button>
+        </div>
+        <div class="card-content">
+          <div class="loading">
+            Carbon footprint information will appear here.
+          </div>
+        </div>
+      </div>
+      <div id="alternatives-card" class="floating-card">
+        <div class="card-header">
+          <span>Travel Alternatives</span>
+          <button
+            class="minimize-btn"
+            onclick="toggleCard('alternatives-card')"
+          >
+            −
+          </button>
+        </div>
+        <div class="card-content">
+          <div class="loading">
+            Alternative travel options will appear here.
+          </div>
+        </div>
       </div>
     </div>
-
-    <div id="carbon-card" class="floating-card">
-      <div class="card-header">
-        <span>Carbon Footprint</span>
-        <button class="minimize-btn" onclick="toggleCard('carbon-card')">−</button>
-      </div>
-      <div class="card-content">
-        <div class="loading">Carbon footprint information will appear here.</div>
-      </div>
-    </div>
-
-    <div id="alternatives-card" class="floating-card">
-      <div class="card-header">
-        <span>Travel Alternatives</span>
-        <button class="minimize-btn" onclick="toggleCard('alternatives-card')">−</button>
-      </div>
-      <div class="card-content">
-        <div class="loading">Alternative travel options will appear here.</div>
-      </div>
-    </div>
-  </div>
-
-  <button class="toggle-btn" id="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
-    <span class="hamburger-line"></span>
-    <span class="hamburger-line"></span>
-    <span class="hamburger-line"></span>
-  </button>
-
-  <script src="script.js"></script>
-</body>
+    <button
+      class="toggle-btn"
+      id="toggle-btn"
+      onclick="toggleSidebar()"
+      aria-label="Toggle sidebar"
+    >
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <script src="script.js"></script>
+  </body>
 </html>
