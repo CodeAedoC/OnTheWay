@@ -221,23 +221,6 @@ function displayWeatherData(weatherData, container) {
     .join("");
 }
 
-function calculateCarbonFootprint(route, travelMode) {
-  const carbonInfoDiv = document
-    .getElementById("carbon-card")
-    .querySelector(".card-content");
-  const distance = route.legs[0].distance.value / 1000;
-
-  let emissionsPerKm = 0;
-  if (travelMode === "DRIVING") {
-    emissionsPerKm = CONFIG.CARBON_EMISSIONS.DRIVING.car;
-  } else if (travelMode === "TRANSIT") {
-    emissionsPerKm = CONFIG.CARBON_EMISSIONS.TRANSIT.bus;
-  }
-
-  const totalEmissions = (distance * emissionsPerKm).toFixed(2);
-
-  displayCarbonData(distance, travelMode, totalEmissions, carbonInfoDiv);
-}
 
 function displayCarbonData(distance, travelMode, totalEmissions, container) {
   container.innerHTML = `
@@ -273,6 +256,21 @@ async function suggestAlternatives(origin, destination, mainRoute) {
   }
 }
 
+function getCarbonEmissionRate(mode) {
+  switch (mode) {
+    case 'DRIVING':
+      return CONFIG.CARBON_EMISSIONS.DRIVING.car;
+    case 'TRANSIT':
+      return CONFIG.CARBON_EMISSIONS.TRANSIT.bus;
+    case 'BICYCLING':
+      return CONFIG.CARBON_EMISSIONS.BICYCLING;
+    case 'WALKING':
+      return CONFIG.CARBON_EMISSIONS.WALKING;
+    default:
+      return 0;
+  }
+}
+
 async function calculateAlternativeRoutes(origin, destination) {
   const travelModes = ["DRIVING", "TRANSIT", "BICYCLING", "WALKING"];
   const alternatives = [];
@@ -295,7 +293,8 @@ async function calculateAlternativeRoutes(origin, destination) {
         const route = response.routes[0];
         const distance = route.legs[0].distance.value / 1000;
         const duration = route.legs[0].duration.text;
-        const emissions = (distance * CONFIG.CARBON_EMISSIONS[mode]).toFixed(2);
+        const emissionRate = getCarbonEmissionRate(mode);
+        const emissions = (distance * emissionRate).toFixed(2);
 
         alternatives.push({
           mode: mode,
@@ -310,6 +309,18 @@ async function calculateAlternativeRoutes(origin, destination) {
   }
 
   return alternatives;
+}
+
+function calculateCarbonFootprint(route, travelMode) {
+  const carbonInfoDiv = document
+    .getElementById("carbon-card")
+    .querySelector(".card-content");
+  const distance = route.legs[0].distance.value / 1000;
+
+  const emissionRate = getCarbonEmissionRate(travelMode);
+  const totalEmissions = (distance * emissionRate).toFixed(2);
+
+  displayCarbonData(distance, travelMode, totalEmissions, carbonInfoDiv);
 }
 
 function displayAlternatives(alternatives, container) {
